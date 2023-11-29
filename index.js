@@ -16,7 +16,7 @@ app.use(express.urlencoded({ extended:   true }));
 
 app.use(
   cookieSession({
-    name: "bezkoder-session",
+    name: "login-app",
     keys: ["COOKIE_SECRET"], // should use as secret environment variable
     httpOnly: true,
     sameSite: 'strict'
@@ -26,10 +26,9 @@ app.use(
 // database
 const db = require("./app/models");
 // db.sequelize.sync({force:false});
-console.log("process.env.PORT",process.env.PORT||3000)
 // simple route
 app.get("/", (req, res) => {
-  res.json({ message: "Welcome to bezkoder application." });
+  res.json({ message: "app is live now" });
 });
 
 // routes

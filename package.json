@@ -19,7 +19,7 @@
     "authorization",
     "postgres"
   ],
-  "author": "bezkoder",
+  "author": "pankaj maurya",
   "license": "ISC",
   "dependencies": {
     "@hapi/joi": "^15.0.3",
