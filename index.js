@@ -24,7 +24,7 @@ app.use(
 
 // database
 const db = require("./app/models");
-db.sequelize.sync({force:false});
+// db.sequelize.sync({force:false});
 console.log("process.env.PORT",process.env.PORT||3000)
 // simple route
 app.get("/", (req, res) => {
