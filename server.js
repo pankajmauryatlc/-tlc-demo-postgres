@@ -24,8 +24,6 @@ app.use(
 
 // database
 const db = require("./app/models");
-const Role = db.role;
-
 db.sequelize.sync({force:false});
 
 // simple route
@@ -43,17 +41,5 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
 });
 
-function initial() {
-  Role.create({
-    id: 1,
-    name: "user",
-  });
-
-
-  Role.create({
-    id: 2,
-    name: "admin",
-  });
-}
 
 //initial();      
