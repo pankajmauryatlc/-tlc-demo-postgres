@@ -1,16 +1,11 @@
-const db = require("../models");
-const User = db.user;
 
+const {pool} = require('../config/db.config')
 checkDuplicateEmail = async (req, res, next) => {
   try {
     // Email
-    user = await User.findOne({
-      where: {
-        email: req.body.email
-      }
-    });
-
-    if (user) {
+    const {email} = req.body
+    user = await pool.query('SELECT * FROM users WHERE email = $1',[email])
+    if (user?.rows[0]) {
       return res.status(400).send({
         message: "Failed! Email is already in use!"
       });

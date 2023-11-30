@@ -1,32 +1,30 @@
-const db = require("../models");
+
 const config = require("../config/auth.config");
-const User = db.user;
 const Joi = require("@hapi/joi")
-const Op = db.Sequelize.Op;
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const {pool} = require('../config/db.config');
 
 exports.signup = async (req, res) => {
   // Save User to Database  
   try {   
       const schema = {
         username : Joi.string().min(4).required(),
-        email: Joi.string().min(4).required().email(),
+        email: Joi.string().min(4).required(),
         password: Joi.string().min(4).required()
     };
     
      const {error} =  Joi.validate(req.body,schema);
-     console.log(error)
       if(error){
         return res.status(400).send({errors:error.details[0].message});
     }
-    const user = await User.create({
-      username: req.body.username,
-      email: req.body.email,
-      password: bcrypt.hashSync(req.body.password, 8),
-    });
-
-      if (user) res.send({ message: "User registered successfully!" });
+    const {username,email,password} = req.body;
+    pool.query('INSERT INTO users (username, email,password) VALUES ($1, $2,$3) RETURNING *', [username, email,bcrypt.hashSync(password, 8)], (error, results) => {
+      if (error) {
+        throw error
+      }
+      if (results?.rows[0]?.id) res.send({ message: "User registered successfully!" });
+    })
   } catch (error) {
     res.status(500).send({ message: error.message });
   }
@@ -34,44 +32,40 @@ exports.signup = async (req, res) => {
 
 exports.signin = async (req, res) => {
   try {
-    const user = await User.findOne({
-      where: {
-        email: req.body.email,
-      },
-    });
-
-    if (!user) {
-      return res.status(404).send({ message: "User Not found." });
-    }
-
-    const passwordIsValid = bcrypt.compareSync(
-      req.body.password,
-      user.password
-    );
-
-    if (!passwordIsValid) {
-      return res.status(401).send({
-        message: "Invalid Password!",
+    const {email,password} = req.body;
+    pool.query('SELECT * FROM users WHERE email = $1',[email],(error,result)=>{
+      if (!result.rows[0]) {
+        return res.status(404).send({ message: "User Not found." });
+      }
+      const passwordIsValid = bcrypt.compareSync(
+        password,
+        result?.rows[0]?.password
+      );
+  
+      if (!passwordIsValid) {
+        return res.status(401).send({
+          message: "Invalid Password!",
+        });
+      }
+  
+      const token = jwt.sign({ id: result?.rows[0]?.id },
+                             config.secret,
+                             {
+                              algorithm: 'HS256',
+                              allowInsecureKeySizes: true,
+                              expiresIn: 86400, // 24 hours
+                             });
+  
+     
+  
+      req.session.token = token;
+      return res.status(200).send({
+        id: result?.rows[0]?.id,
+        username: result?.rows[0].username,
+        email: result?.rows[0].email,
+        _token:token
       });
-    }
-
-    const token = jwt.sign({ id: user.id },
-                           config.secret,
-                           {
-                            algorithm: 'HS256',
-                            allowInsecureKeySizes: true,
-                            expiresIn: 86400, // 24 hours
-                           });
-
-   
-
-    req.session.token = token;
-    return res.status(200).send({
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      _token:token
-    });
+    })
   } catch (error) {
     return res.status(500).send({ message: error.message });
   }

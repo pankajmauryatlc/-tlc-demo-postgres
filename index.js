@@ -1,8 +1,10 @@
 const express = require("express");
 const cors = require("cors");
 const cookieSession = require("cookie-session");
- require('dotenv').config();
+const dotenv = require('dotenv');
+dotenv.config();
 const app = express();
+require('./app/config/db.config')
 
 app.use(cors());
 
@@ -22,10 +24,6 @@ app.use(
     sameSite: 'strict'
   })
 );
-
-// database
-const db = require("./app/models");
-// db.sequelize.sync({force:false});
 // simple route
 app.get("/", (req, res) => {
   res.json({ message: "app is live now" });
@@ -35,11 +33,6 @@ app.get("/", (req, res) => {
 require("./app/routes/auth.routes")(app);
 require("./app/routes/user.routes")(app);
 
-
-
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
 });
-
-
-//initial();      
